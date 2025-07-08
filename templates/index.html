@@ -1,0 +1,420 @@
+{% extends "base.html" %}
+
+{% block title %}TCC Detection System - Home{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="display-4 fw-bold mb-4">
+                    <i class="fas fa-satellite"></i>
+                    Tropical Cloud Cluster Detection
+                </h1>
+                <p class="lead mb-4">
+                    Advanced AI/ML-based algorithm for identifying and tracking Tropical Cloud Clusters 
+                    using half-hourly INSAT-3D satellite data over the Indian Ocean region.
+                </p>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            <span>11 TCC Features</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            <span>Independence Algorithm</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            <span>Time-based Tracking</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 text-center">
+                <i class="fas fa-cloud-rain" style="font-size: 10rem; opacity: 0.3;"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="container my-5">
+    <div class="row">
+        <!-- Detection Configuration -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-cog"></i> Configure TCC Detection
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('run_detection') }}" onsubmit="return validateForm()" id="detection_form">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        <i class="fas fa-database"></i> Data Source
+                                    </label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="use_synthetic" 
+                                               value="true" id="synthetic" checked onchange="toggleDataDirectory()">
+                                        <label class="form-check-label" for="synthetic">
+                                            <i class="fas fa-flask"></i> Synthetic Data (Demo)
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="use_synthetic" 
+                                               value="false" id="real" onchange="toggleDataDirectory()">
+                                        <label class="form-check-label" for="real">
+                                            <i class="fas fa-satellite-dish"></i> Real INSAT-3D Data
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3" id="data-directory-group" style="display: none;">
+                                    <label for="data_directory" class="form-label">
+                                        <i class="fas fa-folder"></i> Data Directory
+                                    </label>
+                                    <input type="text" class="form-control" id="data_directory" 
+                                           name="data_directory" placeholder="Path to INSAT-3D data files">
+                                    <div class="form-text">
+                                        Directory containing NetCDF/HDF5 INSAT-3D files
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="num_time_steps" class="form-label">
+                                        <i class="fas fa-clock"></i> Time Steps
+                                    </label>
+                                    <input type="number" class="form-control" id="num_time_steps" 
+                                           name="num_time_steps" value="8" min="2" max="48" 
+                                           oninput="validateTimeSteps(this)" onchange="validateTimeSteps(this)">
+                                    <div class="form-text" id="time_steps_help">
+                                        Number of half-hourly time steps to process (2-48)
+                                    </div>
+                                    <div class="invalid-feedback" id="time_steps_error" style="display: none;">
+                                        Please enter a value between 2 and 48
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="output_directory" class="form-label">
+                                        <i class="fas fa-save"></i> Output Directory
+                                    </label>
+                                    <input type="text" class="form-control" id="output_directory" 
+                                           name="output_directory" value="web_output">
+                                    <div class="form-text">
+                                        Directory to save results and visualizations
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg" id="run_detection_btn">
+                                <i class="fas fa-play"></i> Run TCC Detection
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="runMinimalTest()">
+                                <i class="fas fa-flask"></i> Run Minimal Test
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- System Information -->
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle"></i> System Info
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Detection Criteria:</strong>
+                        <ul class="list-unstyled mt-2">
+                            <li><i class="fas fa-thermometer-half"></i> IRBT ≤ 230K</li>
+                            <li><i class="fas fa-expand-arrows-alt"></i> Radius ≥ 1° (~111km)</li>
+                            <li><i class="fas fa-vector-square"></i> Area ≥ 34,800 km²</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Geographic Bounds:</strong>
+                        <ul class="list-unstyled mt-2">
+                            <li><i class="fas fa-globe"></i> 30°E - 120°E</li>
+                            <li><i class="fas fa-globe"></i> 40°S - 30°N</li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <strong>Independence Rule:</strong>
+                        <ul class="list-unstyled mt-2">
+                            <li><i class="fas fa-ruler"></i> 1200km separation</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list"></i> TCC Features
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-12">
+                            <ol class="small">
+                                <li>Convective Latitude</li>
+                                <li>Convective Longitude</li>
+                                <li>Pixel Count</li>
+                                <li>Min Temperature</li>
+                                <li>Mean Temperature</li>
+                                <li>Max Radius</li>
+                                <li>Mean Radius</li>
+                                <li>Area (km²)</li>
+                                <li>Cloud Top Height</li>
+                                <li>Circularity</li>
+                                <li>Eccentricity</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="bg-light py-5">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-lg-12 mb-5">
+                <h2 class="fw-bold">System Capabilities</h2>
+                <p class="text-muted">Advanced features for comprehensive TCC analysis</p>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card h-100 text-center">
+                    <div class="card-body">
+                        <i class="fas fa-search feature-icon"></i>
+                        <h5>Detection</h5>
+                        <p class="text-muted">
+                            Automatic identification of TCCs using strict criteria and size validation
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card h-100 text-center">
+                    <div class="card-body">
+                        <i class="fas fa-route feature-icon"></i>
+                        <h5>Tracking</h5>
+                        <p class="text-muted">
+                            Time-based tracking with adaptive search radii for movement analysis
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card h-100 text-center">
+                    <div class="card-body">
+                        <i class="fas fa-brain feature-icon"></i>
+                        <h5>Machine Learning</h5>
+                        <p class="text-muted">
+                            CNN models for pattern recognition with multiple framework support
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card h-100 text-center">
+                    <div class="card-body">
+                        <i class="fas fa-chart-bar feature-icon"></i>
+                        <h5>Visualization</h5>
+                        <p class="text-muted">
+                            Interactive dashboards with geographic mapping and statistical analysis
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function validateTimeSteps(input) {
+    const value = parseInt(input.value);
+    const helpText = document.getElementById('time_steps_help');
+    const errorText = document.getElementById('time_steps_error');
+    const submitBtn = document.getElementById('run_detection_btn');
+    
+    console.log('Validating time steps:', value);
+    
+    if (isNaN(value) || value < 2 || value > 48) {
+        input.classList.add('is-invalid');
+        input.classList.remove('is-valid');
+        errorText.style.display = 'block';
+        helpText.style.display = 'none';
+        submitBtn.disabled = true;
+        console.log('Invalid time steps value:', value);
+        return false;
+    } else {
+        input.classList.remove('is-invalid');
+        input.classList.add('is-valid');
+        errorText.style.display = 'none';
+        helpText.style.display = 'block';
+        submitBtn.disabled = false;
+        console.log('Valid time steps value:', value);
+        return true;
+    }
+}
+
+function validateForm() {
+    const timeStepsInput = document.getElementById('num_time_steps');
+    const realRadio = document.getElementById('real');
+    const dataDirectoryInput = document.getElementById('data_directory');
+    
+    console.log('Validating form...');
+    console.log('Time steps value:', timeStepsInput.value);
+    console.log('Real data selected:', realRadio.checked);
+    console.log('Data directory:', dataDirectoryInput.value);
+    
+    // Validate time steps
+    if (!validateTimeSteps(timeStepsInput)) {
+        alert('Please enter a valid number of time steps (2-48)');
+        return false;
+    }
+    
+    // Validate data directory if real data is selected
+    if (realRadio.checked && !dataDirectoryInput.value.trim()) {
+        alert('Please provide a data directory for real INSAT-3D data');
+        return false;
+    }
+    
+    console.log('Form validation passed');
+    return true;
+}
+
+function toggleDataDirectory() {
+    const realRadio = document.getElementById('real');
+    const dataDirectoryGroup = document.getElementById('data-directory-group');
+    
+    if (realRadio.checked) {
+        dataDirectoryGroup.style.display = 'block';
+        document.getElementById('data_directory').required = true;
+    } else {
+        dataDirectoryGroup.style.display = 'none';
+        document.getElementById('data_directory').required = false;
+    }
+}
+
+function runMinimalTest() {
+    const btn = event.target;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing...';
+    
+    fetch('/test_minimal_detection', {method: 'POST'})
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(`Test successful! Found ${data.num_tccs} TCCs in ${data.num_tracks} tracks.`);
+                window.location.href = data.redirect_url;
+            } else {
+                alert('Test failed: ' + data.error);
+            }
+        })
+        .catch(error => {
+            alert('Test error: ' + error);
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-flask"></i> Run Minimal Test';
+        });
+}
+
+// Form submission handling
+function handleFormSubmission() {
+    const submitBtn = document.getElementById('run_detection_btn');
+    const form = document.getElementById('detection_form');
+    
+    console.log('Form submitted, showing loading state');
+    
+    // Disable submit button and show loading
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Running Detection...';
+    
+    // Add a loading overlay
+    const loadingOverlay = document.createElement('div');
+    loadingOverlay.id = 'loading_overlay';
+    loadingOverlay.innerHTML = `
+        <div class="d-flex justify-content-center align-items-center" style="height: 100vh; position: fixed; top: 0; left: 0; width: 100%; background: rgba(255,255,255,0.8); z-index: 9999;">
+            <div class="text-center">
+                <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <div class="mt-3">
+                    <h5>Running TCC Detection...</h5>
+                    <p class="text-muted">This may take a few moments</p>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(loadingOverlay);
+    
+    return true; // Allow form to submit
+}
+
+// Show current system status
+document.addEventListener('DOMContentLoaded', function() {
+    // Add form submission handler
+    const form = document.getElementById('detection_form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            if (validateForm()) {
+                handleFormSubmission();
+            }
+        });
+    }
+    
+    // Check system status
+    fetch('/api/system_status')
+        .then(response => response.json())
+        .then(data => {
+            if (data.current_results) {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-info alert-dismissible fade show';
+                alertDiv.innerHTML = `
+                    <i class="fas fa-info-circle"></i>
+                    Previous results are available! 
+                    <a href="${window.location.origin}/dashboard" class="alert-link">View Dashboard</a> | 
+                    <a href="${window.location.origin}/simple_dashboard" class="alert-link">Simple View</a>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                
+                const container = document.querySelector('.container.my-5');
+                container.insertBefore(alertDiv, container.firstChild);
+            }
+        })
+        .catch(error => console.error('Error checking status:', error));
+});
+</script>
+{% endblock %} 

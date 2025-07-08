@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Error - TCC Detection System{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-exclamation-triangle"></i> Application Error
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger mb-4">
+                        <h5><i class="fas fa-bug"></i> Error Details</h5>
+                        <p class="mb-0">{{ error }}</p>
+                    </div>
+                    
+                    <h6>What happened?</h6>
+                    <p>
+                        The TCC Detection System encountered an unexpected error while processing your request. 
+                        This could be due to various reasons such as:
+                    </p>
+                    
+                    <ul>
+                        <li>Missing or corrupted data files</li>
+                        <li>Insufficient memory or disk space</li>
+                        <li>Network connectivity issues</li>
+                        <li>Missing Python dependencies</li>
+                        <li>Configuration problems</li>
+                    </ul>
+                    
+                    <h6>What can you do?</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-primary">Immediate Actions</h6>
+                            <ul class="small">
+                                <li>Try refreshing the page</li>
+                                <li>Go back and try again</li>
+                                <li>Clear your browser cache</li>
+                                <li>Check your internet connection</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-primary">If Problem Persists</h6>
+                            <ul class="small">
+                                <li>Check system requirements</li>
+                                <li>Verify all dependencies are installed</li>
+                                <li>Review error logs for details</li>
+                                <li>Restart the application</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                        <a href="{{ url_for('index') }}" class="btn btn-primary">
+                            <i class="fas fa-home"></i> Return to Home
+                        </a>
+                        <button class="btn btn-secondary" onclick="history.back()">
+                            <i class="fas fa-arrow-left"></i> Go Back
+                        </button>
+                        <button class="btn btn-outline-info" onclick="location.reload()">
+                            <i class="fas fa-sync-alt"></i> Retry
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Debugging Information (if in debug mode) -->
+            <div class="card mt-4">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-info-circle"></i> System Information
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h6>Application</h6>
+                            <ul class="list-unstyled small">
+                                <li><strong>System:</strong> TCC Detection</li>
+                                <li><strong>Version:</strong> 1.0</li>
+                                <li><strong>Framework:</strong> Flask</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <h6>Requirements</h6>
+                            <ul class="list-unstyled small">
+                                <li><strong>Python:</strong> 3.8+</li>
+                                <li><strong>Memory:</strong> 4GB+ recommended</li>
+                                <li><strong>Storage:</strong> 1GB+ free space</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <h6>Support</h6>
+                            <ul class="list-unstyled small">
+                                <li><strong>Documentation:</strong> README.md</li>
+                                <li><strong>Dependencies:</strong> requirements.txt</li>
+                                <li><strong>Logs:</strong> Check console output</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-check system status
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() {
+        fetch('/api/system_status')
+            .then(response => response.json())
+            .then(data => {
+                if (data.current_results) {
+                    // If there are results available, show option to go to dashboard
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'alert alert-info mt-3';
+                    alertDiv.innerHTML = `
+                        <i class="fas fa-info-circle"></i>
+                        Previous results are available! 
+                        <a href="${window.location.origin}/dashboard" class="alert-link">View Dashboard</a>
+                    `;
+                    
+                    const cardBody = document.querySelector('.card-body');
+                    cardBody.appendChild(alertDiv);
+                }
+            })
+            .catch(error => {
+                console.log('Cannot check system status');
+            });
+    }, 1000);
+});
+</script>
+{% endblock %} 

@@ -1,0 +1,428 @@
+{% extends "base.html" %}
+
+{% block title %}TCC Detection Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    .stats-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+    }
+    .plot-container {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .data-table {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    .feature-badge {
+        margin: 2px;
+        font-size: 0.8rem;
+    }
+    .download-section {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin: 20px 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid my-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="display-6 fw-bold">
+                        <i class="fas fa-chart-line"></i> TCC Detection Dashboard
+                    </h1>
+                    <p class="text-muted">
+                        {% if metadata.time_range and metadata.time_range.start and metadata.time_range.end %}
+                            Analysis results from {{ metadata.time_range.start[:19] }} to {{ metadata.time_range.end[:19] }}
+                        {% else %}
+                            TCC Detection Results
+                        {% endif %}
+                    </p>
+                </div>
+                <div>
+                    <button class="btn btn-primary" onclick="refreshData()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                    <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> New Detection
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6">
+            <div class="stats-card text-center">
+                <div class="stats-value">{{ metadata.num_tccs }}</div>
+                <div>TCCs Detected</div>
+                <small><i class="fas fa-cloud"></i> Total cloud clusters identified</small>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="stats-card text-center">
+                <div class="stats-value">{{ metadata.num_tracks }}</div>
+                <div>Active Tracks</div>
+                <small><i class="fas fa-route"></i> Tracked movement patterns</small>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="stats-card text-center">
+                <div class="stats-value">{{ metadata.num_time_steps }}</div>
+                <div>Time Steps</div>
+                <small><i class="fas fa-clock"></i> Half-hourly intervals processed</small>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="stats-card text-center">
+                <div class="stats-value">{{ metadata.get('time_span_hours', 0) }}h</div>
+                <div>Time Span</div>
+                <small><i class="fas fa-hourglass-half"></i> Total analysis duration</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <ul class="nav nav-tabs" id="dashboardTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button">
+                <i class="fas fa-chart-pie"></i> Overview
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tracks-tab" data-bs-toggle="tab" data-bs-target="#tracks" type="button">
+                <i class="fas fa-route"></i> Track Analysis
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="features-tab" data-bs-toggle="tab" data-bs-target="#features" type="button">
+                <i class="fas fa-list"></i> Feature Details
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="exports-tab" data-bs-toggle="tab" data-bs-target="#exports" type="button">
+                <i class="fas fa-download"></i> Exports
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="dashboardTabsContent">
+        <!-- Overview Tab -->
+        <div class="tab-pane fade show active" id="overview" role="tabpanel">
+            <div class="row mt-4">
+                {% if plots %}
+                    <div class="col-lg-6">
+                        <div class="plot-container">
+                            <h5><i class="fas fa-thermometer-half"></i> Temperature Distribution</h5>
+                            {% if plots.temp_distribution %}
+                                <img src="data:image/png;base64,{{ plots.temp_distribution }}" class="img-fluid" alt="Temperature Distribution">
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-6">
+                        <div class="plot-container">
+                            <h5><i class="fas fa-expand-arrows-alt"></i> Size Distribution</h5>
+                            {% if plots.size_distribution %}
+                                <img src="data:image/png;base64,{{ plots.size_distribution }}" class="img-fluid" alt="Size Distribution">
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="col-12">
+                        <div class="plot-container">
+                            <h5><i class="fas fa-globe"></i> Geographic Distribution</h5>
+                            {% if plots.geographic_distribution %}
+                                <img src="data:image/png;base64,{{ plots.geographic_distribution }}" class="img-fluid" alt="Geographic Distribution">
+                            {% endif %}
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="col-12">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            No visualization data available. Please ensure the detection process completed successfully.
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Track Analysis Tab -->
+        <div class="tab-pane fade" id="tracks" role="tabpanel">
+            <div class="row mt-4">
+                <div class="col-lg-6">
+                    <div class="plot-container">
+                        <h5><i class="fas fa-clock"></i> Track Duration Distribution</h5>
+                        {% if plots.track_duration %}
+                            <img src="data:image/png;base64,{{ plots.track_duration }}" class="img-fluid" alt="Track Duration">
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <div class="plot-container">
+                        <h5><i class="fas fa-network-wired"></i> Feature Correlation</h5>
+                        {% if plots.track_correlation %}
+                            <img src="data:image/png;base64,{{ plots.track_correlation }}" class="img-fluid" alt="Track Correlation">
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-table"></i> Track Summary</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if track_summary %}
+                                <div class="data-table">
+                                    <table class="table table-striped table-hover">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th>Track ID</th>
+                                                <th>Duration (hrs)</th>
+                                                <th>Distance (km)</th>
+                                                <th>Avg Speed (km/h)</th>
+                                                <th>Observations</th>
+                                                <th>Min Temp (K)</th>
+                                                <th>Max Area (km²)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for track in track_summary %}
+                                                <tr>
+                                                    <td><span class="badge bg-primary">{{ track.track_id }}</span></td>
+                                                    <td>{{ "%.1f"|format(track.duration_hours|default(0)) }}</td>
+                                                    <td>{{ "%.1f"|format(track.total_distance_km|default(0)) }}</td>
+                                                    <td>{{ "%.1f"|format(track.avg_speed_kmh|default(0)) }}</td>
+                                                    <td>{{ track.num_observations|default(0) }}</td>
+                                                    <td>{{ "%.1f"|format(track.min_intensity_tb|default(0)) }}</td>
+                                                    <td>{{ "%.0f"|format(track.max_area_km2|default(0)) }}</td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    No track data available.
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feature Details Tab -->
+        <div class="tab-pane fade" id="features" role="tabpanel">
+            <div class="row mt-4">
+                <div class="col-lg-8">
+                    <div class="plot-container">
+                        <h5><i class="fas fa-chart-bar"></i> Feature Variability Analysis</h5>
+                        {% if plots.feature_importance %}
+                            <img src="data:image/png;base64,{{ plots.feature_importance }}" class="img-fluid" alt="Feature Importance">
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <h5><i class="fas fa-list-check"></i> Extracted Features</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="small text-muted mb-3">
+                                {% if metadata.required_features %}
+                                    All {{ metadata.required_features|length }} required TCC features are extracted:
+                                {% else %}
+                                    TCC features extracted:
+                                {% endif %}
+                            </p>
+                            {% for feature in metadata.get('required_features', []) %}
+                                <span class="badge bg-success feature-badge">
+                                    {{ loop.index }}. {{ feature.replace('_', ' ').title() }}
+                                </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="card mt-3">
+                        <div class="card-header bg-info text-white">
+                            <h6><i class="fas fa-cog"></i> Detection Parameters</h6>
+                        </div>
+                        <div class="card-body small">
+                            <ul class="list-unstyled">
+                                <li><strong>IRBT Threshold:</strong> ≤ 230K</li>
+                                <li><strong>Min Radius:</strong> ≥ 1° (~111km)</li>
+                                <li><strong>Min Area:</strong> ≥ 34,800 km²</li>
+                                <li><strong>Independence:</strong> 1200km rule</li>
+                                <li><strong>Region:</strong> Indian Ocean</li>
+                                <li><strong>Tracking Radii:</strong> 3h:450km, 6h:550km, 9h:600km, 12h:650km</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-12 mt-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-info-circle"></i> Feature Descriptions</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Location Features</h6>
+                                    <ul class="small">
+                                        <li><strong>Convective Lat/Lon:</strong> Center of convective activity</li>
+                                        <li><strong>Pixel Count:</strong> Number of qualifying pixels</li>
+                                        <li><strong>Area:</strong> Total cloud cluster area in km²</li>
+                                    </ul>
+                                    
+                                    <h6>Temperature Features</h6>
+                                    <ul class="small">
+                                        <li><strong>Min Temperature:</strong> Coldest brightness temperature</li>
+                                        <li><strong>Mean Temperature:</strong> Average brightness temperature</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Geometric Features</h6>
+                                    <ul class="small">
+                                        <li><strong>Max/Mean Radius:</strong> Cluster size measurements</li>
+                                        <li><strong>Circularity:</strong> Shape roundness measure</li>
+                                        <li><strong>Eccentricity:</strong> Shape elongation measure</li>
+                                    </ul>
+                                    
+                                    <h6>Physical Features</h6>
+                                    <ul class="small">
+                                        <li><strong>Cloud Top Height:</strong> Estimated height from temperature</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Exports Tab -->
+        <div class="tab-pane fade" id="exports" role="tabpanel">
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="download-section">
+                        <h4><i class="fas fa-download"></i> Download Results</h4>
+                        <p class="text-muted">
+                            Export your TCC detection results in various formats for further analysis.
+                        </p>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Data Files</h6>
+                                <div class="d-grid gap-2">
+                                    <a href="{{ url_for('download_file', file_type='tcc_detections') }}" class="btn btn-outline-primary">
+                                        <i class="fas fa-file-csv"></i> TCC Detections (CSV)
+                                    </a>
+                                    <a href="{{ url_for('download_file', file_type='track_summary') }}" class="btn btn-outline-primary">
+                                        <i class="fas fa-file-csv"></i> Track Summary (CSV)
+                                    </a>
+                                    <a href="{{ url_for('download_file', file_type='tcc_features') }}" class="btn btn-outline-primary">
+                                        <i class="fas fa-file-csv"></i> TCC Features (CSV)
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <h6>Visualizations</h6>
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-outline-success" onclick="downloadVisualization('geographic_map')">
+                                        <i class="fas fa-map"></i> Geographic Map (PNG)
+                                    </button>
+                                    <button class="btn btn-outline-success" onclick="downloadVisualization('track_paths')">
+                                        <i class="fas fa-route"></i> Track Paths (PNG)
+                                    </button>
+                                    <button class="btn btn-outline-success" onclick="downloadVisualization('statistics_plots')">
+                                        <i class="fas fa-chart-bar"></i> Statistics Plots (PNG)
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="row">
+                            <div class="col-12">
+                                <h6>API Access</h6>
+                                <p class="small text-muted">
+                                    Access your data programmatically using these API endpoints:
+                                </p>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <code class="small">GET /api/tcc_data</code>
+                                        <p class="small text-muted">Get summary data and metadata</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <code class="small">GET /api/tcc_details</code>
+                                        <p class="small text-muted">Get detailed TCC information</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function refreshData() {
+    location.reload();
+}
+
+function downloadVisualization(plotType) {
+    fetch(`/visualization/${plotType}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.plot) {
+                const link = document.createElement('a');
+                link.href = 'data:image/png;base64,' + data.plot;
+                link.download = `${plotType}.png`;
+                link.click();
+            } else {
+                alert('Error generating visualization: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error downloading visualization');
+        });
+}
+
+// Load additional interactive plots
+document.addEventListener('DOMContentLoaded', function() {
+    // Add any additional interactive charts here
+    console.log('Dashboard loaded successfully');
+});
+</script>
+{% endblock %} 

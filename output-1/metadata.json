@@ -1,0 +1,24 @@
+{
+  "processing_time": "2025-07-08T02:40:35.308194",
+  "num_time_steps": 39,
+  "num_tracks": 6,
+  "num_tccs": 8,
+  "time_range": {
+    "start": "2024-01-01T00:00:00",
+    "end": "2024-01-01T19:00:00"
+  },
+  "required_features": [
+    "convective_lat",
+    "convective_lon",
+    "pixel_count",
+    "mean_tb",
+    "min_tb",
+    "median_tb",
+    "std_tb",
+    "max_radius_km",
+    "min_radius_km",
+    "mean_radius_km",
+    "max_cloud_height",
+    "mean_cloud_height"
+  ]
+}

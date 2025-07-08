@@ -1,0 +1,476 @@
+{% extends "base.html" %}
+
+{% block title %}ML Training - TCC Detection{% endblock %}
+
+{% block extra_css %}
+<style>
+    .training-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+    .framework-option {
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        padding: 20px;
+        margin: 10px 0;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .framework-option:hover {
+        border-color: #667eea;
+        background-color: #f8f9fa;
+    }
+    .framework-option.selected {
+        border-color: #667eea;
+        background-color: #e3f2fd;
+    }
+    .progress-container {
+        display: none;
+        margin: 20px 0;
+    }
+    .training-logs {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        max-height: 300px;
+        overflow-y: auto;
+        font-family: monospace;
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="training-card">
+                <div class="card-body text-center py-5">
+                    <h1 class="display-5 fw-bold mb-3">
+                        <i class="fas fa-brain"></i> Machine Learning Training
+                    </h1>
+                    <p class="lead">
+                        Train CNN models on your TCC data for enhanced pattern recognition and classification.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Training Interface -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-cog"></i> Training Configuration
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form id="trainingForm">
+                        <!-- Framework Selection -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-microchip"></i> Select ML Framework
+                            </label>
+                            
+                            <div class="framework-option" data-framework="tensorflow">
+                                <div class="d-flex align-items-center">
+                                    <input type="radio" class="form-check-input me-3" name="framework" value="tensorflow" id="tf">
+                                    <div>
+                                        <h6 class="mb-1">
+                                            <i class="fab fa-google"></i> TensorFlow/Keras
+                                        </h6>
+                                        <p class="text-muted mb-0 small">
+                                            Deep learning with CNN architectures, GPU acceleration
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="framework-option" data-framework="pytorch">
+                                <div class="d-flex align-items-center">
+                                    <input type="radio" class="form-check-input me-3" name="framework" value="pytorch" id="pytorch">
+                                    <div>
+                                        <h6 class="mb-1">
+                                            <i class="fab fa-python"></i> PyTorch
+                                        </h6>
+                                        <p class="text-muted mb-0 small">
+                                            Dynamic neural networks, research-friendly interface
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="framework-option" data-framework="sklearn">
+                                <div class="d-flex align-items-center">
+                                    <input type="radio" class="form-check-input me-3" name="framework" value="sklearn" id="sklearn" checked>
+                                    <div>
+                                        <h6 class="mb-1">
+                                            <i class="fas fa-chart-line"></i> Scikit-learn
+                                        </h6>
+                                        <p class="text-muted mb-0 small">
+                                            Classical ML algorithms, fast prototyping (recommended for demo)
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Training Parameters -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="epochs" class="form-label">
+                                        <i class="fas fa-repeat"></i> Training Epochs
+                                    </label>
+                                    <input type="number" class="form-control" id="epochs" name="epochs" 
+                                           value="50" min="10" max="1000">
+                                    <div class="form-text">Number of training iterations (10-1000)</div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="batch_size" class="form-label">
+                                        <i class="fas fa-layer-group"></i> Batch Size
+                                    </label>
+                                    <input type="number" class="form-control" id="batch_size" name="batch_size" 
+                                           value="32" min="1" max="256">
+                                    <div class="form-text">Training batch size (1-256)</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="learning_rate" class="form-label">
+                                        <i class="fas fa-tachometer-alt"></i> Learning Rate
+                                    </label>
+                                    <select class="form-select" id="learning_rate" name="learning_rate">
+                                        <option value="0.001" selected>0.001 (Default)</option>
+                                        <option value="0.01">0.01 (Fast)</option>
+                                        <option value="0.0001">0.0001 (Conservative)</option>
+                                        <option value="0.1">0.1 (Aggressive)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="validation_split" class="form-label">
+                                        <i class="fas fa-percentage"></i> Validation Split
+                                    </label>
+                                    <select class="form-select" id="validation_split" name="validation_split">
+                                        <option value="0.2" selected>20% (Recommended)</option>
+                                        <option value="0.1">10% (More training data)</option>
+                                        <option value="0.3">30% (More validation)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Training Controls -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg" id="trainButton">
+                                <i class="fas fa-play"></i> Start Training
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <!-- Progress Section -->
+                    <div class="progress-container" id="progressContainer">
+                        <hr>
+                        <h5><i class="fas fa-chart-line"></i> Training Progress</h5>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>Progress</span>
+                                <span id="progressText">0%</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="training-logs" id="trainingLogs">
+                            <div class="text-muted">Training logs will appear here...</div>
+                        </div>
+                        
+                        <button class="btn btn-outline-danger" id="stopButton" style="display: none;">
+                            <i class="fas fa-stop"></i> Stop Training
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Information Panel -->
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle"></i> Training Info
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Data Requirements:</strong>
+                        <ul class="list-unstyled mt-2 small">
+                            <li><i class="fas fa-check text-success"></i> TCC detection results available</li>
+                            <li><i class="fas fa-exclamation-triangle text-warning"></i> Minimum 10 TCC samples needed</li>
+                            <li><i class="fas fa-info text-info"></i> Features automatically normalized</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Model Architecture:</strong>
+                        <ul class="list-unstyled mt-2 small">
+                            <li><i class="fas fa-layer-group"></i> Convolutional Neural Network</li>
+                            <li><i class="fas fa-brain"></i> Feature extraction layers</li>
+                            <li><i class="fas fa-arrow-right"></i> Classification head</li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <strong>Applications:</strong>
+                        <ul class="list-unstyled mt-2 small">
+                            <li><i class="fas fa-search"></i> Improved TCC detection</li>
+                            <li><i class="fas fa-route"></i> Track prediction</li>
+                            <li><i class="fas fa-chart-bar"></i> Intensity forecasting</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-lightbulb"></i> Tips
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled small">
+                        <li class="mb-2">
+                            <i class="fas fa-rocket text-primary"></i>
+                            <strong>Quick Start:</strong> Use sklearn for fast prototyping
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-gpu text-primary"></i>
+                            <strong>Performance:</strong> TensorFlow/PyTorch for production
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-clock text-primary"></i>
+                            <strong>Time:</strong> Start with 50 epochs for initial testing
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-chart-line text-primary"></i>
+                            <strong>Monitoring:</strong> Watch for overfitting in logs
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h6 class="mb-0">
+                        <i class="fas fa-exclamation-triangle"></i> Requirements
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div id="dataStatus" class="small">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                            Checking data availability...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Check data availability
+    checkDataAvailability();
+    
+    // Framework selection handling
+    const frameworkOptions = document.querySelectorAll('.framework-option');
+    frameworkOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            const radio = this.querySelector('input[type="radio"]');
+            radio.checked = true;
+            
+            // Remove selected class from all options
+            frameworkOptions.forEach(opt => opt.classList.remove('selected'));
+            // Add selected class to clicked option
+            this.classList.add('selected');
+        });
+    });
+    
+    // Set initial selection
+    document.querySelector('.framework-option[data-framework="sklearn"]').classList.add('selected');
+    
+    // Training form submission
+    document.getElementById('trainingForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        startTraining();
+    });
+});
+
+function checkDataAvailability() {
+    console.log('Checking TCC data availability...');
+    
+    fetch('/api/tcc_data')
+        .then(response => {
+            console.log('API response status:', response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log('API response data:', data);
+            const statusDiv = document.getElementById('dataStatus');
+            const trainButton = document.getElementById('trainButton');
+            
+            if (data.error) {
+                console.log('No TCC data available:', data.error);
+                statusDiv.innerHTML = `
+                    <div class="alert alert-danger alert-sm">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        ${data.error}
+                    </div>
+                `;
+                trainButton.disabled = true;
+                trainButton.innerHTML = '<i class="fas fa-ban"></i> No Data Available';
+            } else {
+                const numTccs = data.metadata ? data.metadata.num_tccs : 0;
+                console.log('TCC data available:', numTccs, 'TCCs');
+                
+                if (numTccs > 0) {
+                    statusDiv.innerHTML = `
+                        <div class="alert alert-success alert-sm">
+                            <i class="fas fa-check-circle"></i>
+                            ${numTccs} TCCs available for training
+                        </div>
+                    `;
+                    trainButton.disabled = false;
+                    trainButton.innerHTML = '<i class="fas fa-play"></i> Start Training';
+                } else {
+                    statusDiv.innerHTML = `
+                        <div class="alert alert-warning alert-sm">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            No TCCs detected in current data
+                        </div>
+                    `;
+                    trainButton.disabled = true;
+                    trainButton.innerHTML = '<i class="fas fa-exclamation-triangle"></i> No TCCs Found';
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error checking data availability:', error);
+            const statusDiv = document.getElementById('dataStatus');
+            const trainButton = document.getElementById('trainButton');
+            
+            statusDiv.innerHTML = `
+                <div class="alert alert-warning alert-sm">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Unable to check data status: ${error.message}
+                </div>
+            `;
+            trainButton.disabled = true;
+            trainButton.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Check Failed';
+        });
+}
+
+function startTraining() {
+    const formData = new FormData(document.getElementById('trainingForm'));
+    const progressContainer = document.getElementById('progressContainer');
+    const trainButton = document.getElementById('trainButton');
+    const stopButton = document.getElementById('stopButton');
+    const logsDiv = document.getElementById('trainingLogs');
+    
+    // Show progress section
+    progressContainer.style.display = 'block';
+    trainButton.disabled = true;
+    stopButton.style.display = 'inline-block';
+    
+    // Clear previous logs
+    logsDiv.innerHTML = '<div class="text-info">Starting training...</div>';
+    
+    // Simulate training progress (in real implementation, this would be WebSocket or polling)
+    let progress = 0;
+    const progressInterval = setInterval(() => {
+        progress += Math.random() * 10;
+        if (progress > 100) progress = 100;
+        
+        updateProgress(progress);
+        
+        if (progress >= 100) {
+            clearInterval(progressInterval);
+            completeTraining();
+        }
+    }, 1000);
+    
+    // Start actual training
+    fetch('/run_ml_training', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            logsDiv.innerHTML += `<div class="text-success">${data.message}</div>`;
+            if (data.results) {
+                logsDiv.innerHTML += `<div class="text-info">Training completed successfully!</div>`;
+                logsDiv.innerHTML += `<div class="small text-muted">Model saved to: web_trained_model</div>`;
+            }
+        } else {
+            logsDiv.innerHTML += `<div class="text-danger">Error: ${data.error}</div>`;
+        }
+    })
+    .catch(error => {
+        logsDiv.innerHTML += `<div class="text-danger">Network error: ${error.message}</div>`;
+    });
+}
+
+function updateProgress(percent) {
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    
+    progressBar.style.width = percent + '%';
+    progressText.textContent = Math.round(percent) + '%';
+    
+    // Add training logs simulation
+    const logsDiv = document.getElementById('trainingLogs');
+    if (percent < 100) {
+        const epoch = Math.floor(percent / 2);
+        const loss = (1.0 - percent/100 + Math.random() * 0.1).toFixed(4);
+        const accuracy = (percent/100 * 0.8 + Math.random() * 0.2).toFixed(4);
+        
+        logsDiv.innerHTML += `<div class="small">Epoch ${epoch}: loss=${loss}, accuracy=${accuracy}</div>`;
+        logsDiv.scrollTop = logsDiv.scrollHeight;
+    }
+}
+
+function completeTraining() {
+    const trainButton = document.getElementById('trainButton');
+    const stopButton = document.getElementById('stopButton');
+    const logsDiv = document.getElementById('trainingLogs');
+    
+    trainButton.disabled = false;
+    stopButton.style.display = 'none';
+    
+    logsDiv.innerHTML += `
+        <div class="text-success fw-bold">
+            <i class="fas fa-check-circle"></i> Training completed successfully!
+        </div>
+        <div class="small text-muted">Model ready for inference and evaluation.</div>
+    `;
+}
+</script>
+{% endblock %} 

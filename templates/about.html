@@ -1,0 +1,379 @@
+{% extends "base.html" %}
+
+{% block title %}About - TCC Detection System{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <!-- Header -->
+    <div class="row mb-5">
+        <div class="col-12 text-center">
+            <h1 class="display-4 fw-bold mb-3">
+                <i class="fas fa-satellite"></i> About TCC Detection System
+            </h1>
+            <p class="lead text-muted">
+                Advanced AI/ML-based algorithm for Tropical Cloud Cluster identification and tracking
+            </p>
+        </div>
+    </div>
+
+    <!-- System Overview -->
+    <div class="row mb-5">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-info-circle"></i> System Overview
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <p>
+                        The TCC Detection System is a comprehensive solution for identifying and tracking 
+                        Tropical Cloud Clusters (TCCs) using half-hourly INSAT-3D satellite data over the 
+                        Indian Ocean region. The system implements strict detection criteria, advanced 
+                        independence algorithms, and time-based tracking capabilities.
+                    </p>
+                    
+                    <h6><i class="fas fa-bullseye"></i> Key Objectives</h6>
+                    <ul>
+                        <li>Automatic identification of convective cloud clusters</li>
+                        <li>Extraction of 11 specific TCC features</li>
+                        <li>Implementation of 1200km independence rule</li>
+                        <li>Time-based tracking with adaptive search radii</li>
+                        <li>Machine learning integration for pattern recognition</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Technical Specifications -->
+    <div class="row mb-5">
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-cog"></i> Technical Specifications
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <h6>Data Requirements</h6>
+                    <ul class="small">
+                        <li><strong>Source:</strong> INSAT-3D IRBRT</li>
+                        <li><strong>Resolution:</strong> Half-hourly</li>
+                        <li><strong>Region:</strong> Indian Ocean (30°E-120°E, 40°S-30°N)</li>
+                        <li><strong>Format:</strong> NetCDF/HDF5</li>
+                    </ul>
+                    
+                    <h6>Detection Criteria</h6>
+                    <ul class="small">
+                        <li><strong>Temperature:</strong> IRBT ≤ 230K</li>
+                        <li><strong>Size:</strong> Radius ≥ 1° (~111km)</li>
+                        <li><strong>Area:</strong> ≥ 34,800 km²</li>
+                        <li><strong>Shape:</strong> Circular structure validation</li>
+                    </ul>
+                    
+                    <h6>Independence Algorithm</h6>
+                    <ul class="small">
+                        <li><strong>Separation:</strong> 1200km minimum distance</li>
+                        <li><strong>Grouping:</strong> Parent cluster identification</li>
+                        <li><strong>Validation:</strong> Distance matrix calculations</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list-check"></i> Extracted Features
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <h6>Location Features</h6>
+                    <ol class="small">
+                        <li>Convective Latitude</li>
+                        <li>Convective Longitude</li>
+                        <li>Pixel Count</li>
+                    </ol>
+                    
+                    <h6>Temperature Features</h6>
+                    <ol class="small" start="4">
+                        <li>Minimum Temperature</li>
+                        <li>Mean Temperature</li>
+                    </ol>
+                    
+                    <h6>Geometric Features</h6>
+                    <ol class="small" start="6">
+                        <li>Maximum Radius</li>
+                        <li>Mean Radius</li>
+                        <li>Area (km²)</li>
+                        <li>Circularity</li>
+                        <li>Eccentricity</li>
+                    </ol>
+                    
+                    <h6>Physical Features</h6>
+                    <ol class="small" start="11">
+                        <li>Cloud Top Height</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tracking Algorithm -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">
+                        <i class="fas fa-route"></i> Tracking Algorithm
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h6>Time-based Search Radii</h6>
+                            <p>
+                                The tracking algorithm uses adaptive search radii based on time gaps 
+                                between observations to account for cloud movement and evolution:
+                            </p>
+                            
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Time Gap</th>
+                                            <th>Search Radius</th>
+                                            <th>Purpose</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>3 hours</td>
+                                            <td>450 km</td>
+                                            <td>Short-term tracking</td>
+                                        </tr>
+                                        <tr>
+                                            <td>6 hours</td>
+                                            <td>550 km</td>
+                                            <td>Medium-term tracking</td>
+                                        </tr>
+                                        <tr>
+                                            <td>9 hours</td>
+                                            <td>600 km</td>
+                                            <td>Extended tracking</td>
+                                        </tr>
+                                        <tr>
+                                            <td>12 hours</td>
+                                            <td>650 km</td>
+                                            <td>Long-term tracking</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <h6>Tracking Features</h6>
+                            <ul class="small">
+                                <li><i class="fas fa-crosshairs"></i> Geometric center tracking</li>
+                                <li><i class="fas fa-tachometer-alt"></i> Movement validation</li>
+                                <li><i class="fas fa-chart-line"></i> Intensity evolution</li>
+                                <li><i class="fas fa-clock"></i> Temporal continuity</li>
+                                <li><i class="fas fa-route"></i> Track path optimization</li>
+                            </ul>
+                            
+                            <h6>Quality Metrics</h6>
+                            <ul class="small">
+                                <li><i class="fas fa-ruler"></i> Track duration</li>
+                                <li><i class="fas fa-arrows-alt"></i> Total distance</li>
+                                <li><i class="fas fa-speedometer"></i> Average speed</li>
+                                <li><i class="fas fa-thermometer-half"></i> Temperature evolution</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Machine Learning -->
+    <div class="row mb-5">
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-brain"></i> Machine Learning Integration
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <h6>Supported Frameworks</h6>
+                    <ul class="small">
+                        <li><i class="fab fa-google"></i> <strong>TensorFlow/Keras:</strong> Deep learning with GPU support</li>
+                        <li><i class="fab fa-python"></i> <strong>PyTorch:</strong> Dynamic neural networks</li>
+                        <li><i class="fas fa-chart-line"></i> <strong>Scikit-learn:</strong> Classical ML algorithms</li>
+                    </ul>
+                    
+                    <h6>Model Architectures</h6>
+                    <ul class="small">
+                        <li>Convolutional Neural Networks (CNNs)</li>
+                        <li>Feature extraction layers</li>
+                        <li>Classification and regression heads</li>
+                        <li>Pattern recognition modules</li>
+                    </ul>
+                    
+                    <h6>Applications</h6>
+                    <ul class="small">
+                        <li>Enhanced TCC detection accuracy</li>
+                        <li>Track prediction and forecasting</li>
+                        <li>Intensity evolution modeling</li>
+                        <li>Automated feature extraction</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar"></i> Visualization Capabilities
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <h6>Interactive Dashboard</h6>
+                    <ul class="small">
+                        <li>Real-time detection results</li>
+                        <li>Geographic distribution maps</li>
+                        <li>Statistical analysis charts</li>
+                        <li>Track evolution plots</li>
+                    </ul>
+                    
+                    <h6>Export Options</h6>
+                    <ul class="small">
+                        <li><i class="fas fa-file-csv"></i> CSV data files</li>
+                        <li><i class="fas fa-image"></i> High-resolution plots</li>
+                        <li><i class="fas fa-code"></i> API access endpoints</li>
+                        <li><i class="fas fa-download"></i> Batch downloads</li>
+                    </ul>
+                    
+                    <h6>Plot Types</h6>
+                    <ul class="small">
+                        <li>Temperature distribution histograms</li>
+                        <li>Size and area scatter plots</li>
+                        <li>Geographic heat maps</li>
+                        <li>Track path visualizations</li>
+                        <li>Feature correlation matrices</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Technology Stack -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-layer-group"></i> Technology Stack
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <h6><i class="fab fa-python"></i> Backend</h6>
+                            <ul class="list-unstyled small">
+                                <li>Python 3.10+</li>
+                                <li>Flask Web Framework</li>
+                                <li>NumPy & SciPy</li>
+                                <li>Pandas</li>
+                                <li>Scikit-image</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <h6><i class="fas fa-chart-line"></i> Data Science</h6>
+                            <ul class="list-unstyled small">
+                                <li>Matplotlib</li>
+                                <li>Seaborn</li>
+                                <li>NetCDF4</li>
+                                <li>H5py</li>
+                                <li>Cartopy</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <h6><i class="fas fa-brain"></i> Machine Learning</h6>
+                            <ul class="list-unstyled small">
+                                <li>TensorFlow</li>
+                                <li>PyTorch</li>
+                                <li>Scikit-learn</li>
+                                <li>OpenCV</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <h6><i class="fas fa-desktop"></i> Frontend</h6>
+                            <ul class="list-unstyled small">
+                                <li>Bootstrap 5</li>
+                                <li>Chart.js</li>
+                                <li>Font Awesome</li>
+                                <li>JavaScript ES6+</li>
+                                <li>HTML5 & CSS3</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Project Information -->
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h4 class="mb-0 text-center">
+                        <i class="fas fa-info"></i> Project Information
+                    </h4>
+                </div>
+                <div class="card-body text-center">
+                    <p class="mb-3">
+                        This system was developed as a comprehensive solution for Tropical Cloud Cluster 
+                        detection and analysis using advanced computer vision and machine learning techniques.
+                    </p>
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <i class="fas fa-calendar-alt text-primary fa-2x mb-2"></i>
+                            <h6>Development Year</h6>
+                            <p class="text-muted">2024</p>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <i class="fas fa-code text-success fa-2x mb-2"></i>
+                            <h6>Primary Language</h6>
+                            <p class="text-muted">Python</p>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <i class="fas fa-satellite text-info fa-2x mb-2"></i>
+                            <h6>Data Source</h6>
+                            <p class="text-muted">INSAT-3D</p>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <p class="small text-muted mb-0">
+                        For technical support or questions about the TCC Detection System, 
+                        please refer to the documentation or contact the development team.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
