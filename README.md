@@ -3,6 +3,7 @@
 ## **AI/ML-based Algorithm for Identifying TCCs using INSAT-3D Satellite Data**
 
 A comprehensive, production-ready system for detecting, analyzing, and tracking Tropical Cloud Clusters over the Indian Ocean region using half-hourly INSAT-3D Infrared Brightness Temperature (IRBRT) data.
+
 Demo Video: https://www.youtube.com/watch?v=vkiu6DHHbBM
 ---
 
